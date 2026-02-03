@@ -1,4 +1,5 @@
 import typer
+from typing import Optional
 from app.database import create_db_and_tables, get_session, drop_all
 from app.models import User
 from fastapi import Depends
@@ -6,7 +7,7 @@ from sqlmodel import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 
-cli = typer.Typer()
+cli = typer.Typer(help="User management CLI for the application.")
 
 @cli.command()
 def initialize():
@@ -86,6 +87,19 @@ def find_user(search: str):
             print(f'{username} not found!')
             return
         print(user)
+
+@cli.command()
+def list_users(limit: int = 10, offset: int = 0):
+    with get_session() as db:
+        users = db.exec(select(User) .offset(offset) .limit(limit)).all()
+
+        if not users:
+            print("No users found.")
+            return
+
+        for user in users:
+            print(user)
+
 
 if __name__ == "__main__":
     cli()
